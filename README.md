@@ -1,84 +1,168 @@
 # food2fit - iOS App
 
-**Connect Meals to Exercise**
+**Transform Meals into Actionable Fitness Goals**
 
-food2fit is an iOS application that helps users understand the relationship between their meals and physical activity. Take a photo of your meal, and the app calculates how much exercise you need to burn off those calories.
+food2fit is a comprehensive iOS application that helps users understand the relationship between their meals and physical activity. Take a photo of your meal, and the app analyzes the food, estimates calories, and shows you exactly how much exercise you need to burn it off.
 
-## Features
+## ✨ Features
 
-- 📸 **Meal Photo Capture**: Take photos of your meals using the camera or select from your photo library
-- 🔢 **Calorie Estimation**: Automatically estimates the caloric content of your meal (simulated for MVP)
-- 🏃 **Exercise Conversion**: Converts calories into exercise time for various activities:
-  - Running
-  - Jogging
-  - Walking
-  - Cycling
-  - Swimming
-  - Jump Rope
-  - Dancing
-  - Yoga
-- 💪 **Actionable Results**: See exactly how much time you need to spend on different exercises
+### Core Functionality
+- 📸 **Meal Photo Capture**: Take photos of your meals or select from your photo library
+- 🍎 **AI Food Recognition**: Automatically identifies food items in your photos
+- 🔢 **Nutrition Analysis**: Estimates calories, protein, carbs, fat, and more
+- 🏃 **Exercise Conversion**: Converts calories into time for 15+ activities
+- 💡 **Personalized Advice**: AI-powered suggestions based on your goals
 
-## How It Works
+### User Experience
+- 👤 **User Profiles**: Personalized calorie targets based on your stats
+- 📊 **Dashboard**: Daily progress, streaks, and weekly trends
+- 📈 **Statistics**: Charts and analytics for your eating habits
+- 📋 **Meal History**: Browse and review past meals
+- ⚙️ **Customizable**: Configure API settings for enhanced analysis
 
-1. **Capture**: Take a photo of your meal or select one from your library
-2. **Calculate**: The app estimates the calories in your meal (currently simulated; production version would use ML models)
-3. **Convert**: Calories are converted to exercise time for multiple activity types
-4. **Act**: Choose your preferred exercise and get moving!
+## 🎯 Supported Exercises
 
-## About This App
+| Exercise | Intensity | MET Value |
+|----------|-----------|-----------|
+| Running | High | 9.8 |
+| Jump Rope | High | 12.3 |
+| Swimming | High | 8.0 |
+| Stair Climbing | High | 8.0 |
+| Cycling | Moderate | 7.5 |
+| Jogging | Moderate | 7.0 |
+| Tennis | Moderate | 7.3 |
+| Hiking | Moderate | 6.0 |
+| Walking | Low | 3.5 |
+| Dancing | Low | 5.5 |
+| Yoga | Low | 3.0 |
+| Weight Lifting | Low | 5.0 |
 
-This is a production iOS app designed to help users make informed decisions about their health by connecting what they eat with how they move. The app aims to provide motivation by showing the direct relationship between food intake and exercise output.
+## 🛠 Technical Stack
 
-## Build the app
+- **Language**: Swift 5.9+
+- **UI Framework**: SwiftUI
+- **Data Persistence**: SwiftData with iCloud sync
+- **Architecture**: MVVM with Services layer
+- **Charts**: Swift Charts (iOS 16+)
+- **AI Integration**: OpenAI API compatible
 
-After forking the repository, you'll need to install CocoaPods to build the app.
+## 📱 Requirements
 
-```sh
-sudo gem install cocoapods
+- iOS 17.0+
+- Xcode 15.0+
+- Camera permission for meal photos
+- Photo library permission for selecting images
+- Optional: OpenAI API key for enhanced analysis
+
+## 🚀 Getting Started
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/gnahz-eh/food2fit2.git
+cd food2fit2
 ```
 
-Next, install the dependencies.
-
-```sh
-pod install
+2. Open the project in Xcode:
+```bash
+open food2fit.xcodeproj
 ```
 
-Open the .xcworkspace. The app can now build and run.
+3. Select your development team for code signing
 
-## Codesigning
+4. Build and run on a simulator or device
 
-_Codesigning is optional, but recommended._
+### Configuration
 
-Codesigning will allow you to deploy this app to your device.
+For enhanced AI-powered nutrition analysis:
 
-When creating a new App ID for this app, be sure to check the **Camera** permission under the **App Services** section.
+1. Launch the app and complete onboarding
+2. Go to **Profile** tab
+3. Tap **API Configuration**
+4. Enter your OpenAI API key
+5. (Optional) Customize endpoint for compatible APIs
 
-To sign the app in Xcode:
+## 📖 How It Works
 
-1. Open **.xcworkspace** from the app's folder.
-2. Go to **General** within the .xcworkspace file.
-3. Under **Identity**, edit the **Bundle Identifier** to match the app ID.
-4. Import and select the provisioning profile under **Signing (Debug)** and **Signing (Release)**.
+### The Science Behind It
 
-## Technical Details
+**Calorie Calculations**: Uses the Mifflin-St Jeor equation
+```
+BMR (male) = (10 × weight_kg) + (6.25 × height_cm) - (5 × age) + 5
+BMR (female) = (10 × weight_kg) + (6.25 × height_cm) - (5 × age) - 161
+TDEE = BMR × Activity Multiplier
+```
 
-- **Platform**: iOS
-- **Language**: Swift
-- **Architecture**: MVC pattern with service layer
-- **Key Components**:
-  - `WelcomeViewController`: Entry point and app introduction
-  - `MealCameraViewController`: Handles photo capture and selection
-  - `CalorieCalculationService`: Estimates calories from meal images
-  - `ExerciseConversionService`: Converts calories to exercise time
-  - `ExerciseResultsViewController`: Displays exercise options
+**Exercise Conversion**: Uses Metabolic Equivalent of Task (MET)
+```
+Calories/minute = (MET × 3.5 × weight_kg) / 200
+```
 
-## Future Enhancements
+### Workflow
 
-- Integration with Core ML for accurate food recognition
-- Cloud-based food recognition API integration
-- User profiles and history tracking
-- Customizable exercise calorie burn rates based on user weight/fitness
-- Social sharing features
-- Integration with HealthKit
-- Nutritional breakdown beyond calories
+1. **Capture**: Take or select a photo of your meal
+2. **Recognize**: AI identifies food items in the photo
+3. **Analyze**: Fetch nutrition data (local DB or LLM API)
+4. **Convert**: Calculate exercise time based on your weight
+5. **Advise**: Get personalized fitness recommendations
+
+## 🗂 Project Structure
+
+```
+food2fit/
+├── Models/
+│   ├── UserProfile.swift      # User data model
+│   ├── Meal.swift             # Meal entries
+│   └── ExerciseType.swift     # Exercise definitions
+├── ViewModels/
+│   ├── OnboardingViewModel.swift
+│   ├── MealAnalysisViewModel.swift
+│   ├── DashboardViewModel.swift
+│   └── ProfileViewModel.swift
+├── Services/
+│   ├── FoodRecognitionService.swift
+│   ├── NutritionAPIService.swift
+│   ├── ExerciseConversionService.swift
+│   └── LLMAdviceService.swift
+├── Views/
+│   ├── Main/               # Tab navigation
+│   ├── Onboarding/         # First-time setup
+│   ├── Dashboard/          # Home screen
+│   ├── Camera/             # Meal capture
+│   ├── History/            # Past meals
+│   ├── Stats/              # Analytics
+│   ├── Profile/            # User settings
+│   └── Components/         # Reusable UI
+└── food2fitApp.swift       # App entry point
+```
+
+## 🔮 Roadmap
+
+### Coming Soon
+- [ ] CoreML food recognition model integration
+- [ ] HealthKit integration
+- [ ] Apple Watch companion app
+- [ ] Home screen widgets
+- [ ] Push notification reminders
+
+### Future Ideas
+- [ ] Barcode scanning for packaged foods
+- [ ] Social sharing features
+- [ ] Meal planning suggestions
+- [ ] AR exercise visualization
+- [ ] Community challenges
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is available under the MIT License.
+
+## 🙏 Acknowledgments
+
+- MET values from the [Compendium of Physical Activities](https://sites.google.com/site/compendiumofphysicalactivities/)
+- Mifflin-St Jeor equation for BMR calculations
+- Apple for SwiftUI and SwiftData frameworks

@@ -6,5 +6,11 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>food2fit needs camera access to take photos of your meals for nutritional analysis.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>food2fit needs photo library access to select meal photos for nutritional analysis.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>food2fit needs permission to save meal photos to your photo library.</string>
 </dict>
 </plist>

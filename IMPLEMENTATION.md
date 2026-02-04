@@ -2,102 +2,193 @@
 
 ## Overview
 
-food2fit is an iOS app that connects meals to exercise by calculating how much physical activity is needed to burn off the calories from a photographed meal.
+food2fit is a comprehensive iOS app that connects meals to exercise by analyzing food photos and calculating how much physical activity is needed to burn off the calories. The app uses a hybrid architecture combining on-device processing with cloud LLM APIs for intelligent nutrition analysis.
 
 ## Architecture
 
-### MVC Pattern with Service Layer
+### MVVM Pattern with Services Layer
 
-The app follows the Model-View-Controller pattern with separate service classes for business logic:
+The app follows the Model-View-ViewModel pattern with separate service classes for business logic:
 
 ```
-View Controllers:
-├── WelcomeViewController       # Entry point
-├── MealCameraViewController    # Photo capture
-└── ExerciseResultsViewController # Results display
+Models/
+├── UserProfile.swift       # User profile with fitness goals
+├── Meal.swift              # Meal entries with food items
+└── ExerciseType.swift      # Exercise types with MET values
 
-Services:
-├── CalorieCalculationService   # Calorie estimation
-└── ExerciseConversionService   # Exercise conversion logic
+ViewModels/
+├── OnboardingViewModel.swift      # Onboarding flow logic
+├── MealAnalysisViewModel.swift    # Meal photo analysis
+├── DashboardViewModel.swift       # Home screen data
+└── ProfileViewModel.swift         # Profile management
+
+Services/
+├── FoodRecognitionService.swift    # Vision/CoreML food recognition
+├── NutritionAPIService.swift       # LLM-powered nutrition lookup
+├── ExerciseConversionService.swift # Calorie to exercise conversion
+└── LLMAdviceService.swift          # AI-powered fitness advice
+
+Views/
+├── Main/
+│   └── MainTabView.swift          # Tab bar navigation
+├── Onboarding/
+│   └── OnboardingView.swift       # User onboarding flow
+├── Dashboard/
+│   └── DashboardView.swift        # Home screen
+├── Camera/
+│   ├── CameraView.swift           # Camera capture
+│   ├── MealCaptureView.swift      # Meal photo flow
+│   └── MealAnalysisResultsView.swift  # Analysis results
+├── History/
+│   ├── MealHistoryView.swift      # Meal history list
+│   └── MealDetailView.swift       # Individual meal details
+├── Stats/
+│   └── StatsView.swift            # Statistics and charts
+├── Profile/
+│   └── ProfileView.swift          # User profile
+└── Components/
+    ├── AppColors.swift            # Color definitions
+    └── CommonComponents.swift     # Reusable UI components
 ```
 
-## User Flow
+## Data Models
 
-1. **Welcome Screen** (`WelcomeViewController`)
-   - Shows app introduction
-   - "Get Started" button launches camera modal
+### UserProfile
+- Stores user personal info (name, age, weight, height)
+- Fitness goals (weight loss, muscle gain, maintenance)
+- Activity level with BMR/TDEE calculations
+- Persisted with SwiftData and iCloud sync
 
-2. **Camera Screen** (`MealCameraViewController`)
-   - Take photo or select from library
-   - Automatically processes image on selection
+### Meal
+- Meal type (breakfast, lunch, dinner, snack)
+- Photo data
+- Related food items with nutrition info
+- Exercise suggestions
+- LLM-generated advice
 
-3. **Results Screen** (`ExerciseResultsViewController`)
-   - Shows meal photo
-   - Lists 8 exercise options with time needed
-   - "Done" button returns to welcome screen
+### ExerciseType
+- 15+ exercise types with accurate MET values
+- Calorie burn calculations based on user weight
+- Intensity levels (low, moderate, high)
 
-## Key Components
+## Key Features
 
-### CalorieCalculationService
+### 1. User Onboarding
+- Step-by-step profile setup
+- Collects: name, age, weight, height, sex
+- Fitness goal selection
+- Activity level assessment
+- BMI/BMR/TDEE calculation
 
-**Current Implementation**: Simulates calorie estimation with random values (100-700 cal range)
+### 2. Meal Photo Capture
+- Camera integration for new photos
+- Photo library picker
+- Meal type selection
+- Preview before analysis
 
-**Production Ready**: Designed for easy integration with:
-- Core ML models for on-device food recognition
-- Cloud APIs (Clarifai, Google Vision, AWS Rekognition)
-- Custom trained models
+### 3. Food Recognition
+- **Current**: Simulated recognition for MVP
+- **Production**: CoreML model integration ready
+- Supports multiple food items per photo
+- Confidence scoring
 
-```swift
-// Future integration point
-static func estimateCalories(from image: UIImage) -> Int {
-    // Replace simulation with:
-    // 1. Core ML model prediction
-    // 2. Cloud API call
-    // 3. Custom model inference
-}
-```
+### 4. Nutrition Analysis
+- Local fallback database (30+ foods)
+- LLM API integration (OpenAI/compatible)
+- Full macronutrient breakdown
+- Portion size estimation
 
-### ExerciseConversionService
+### 5. Exercise Conversion
+- MET-based calorie calculations
+- Personalized to user weight
+- 15 exercise types
+- Duration formatting
 
-**Exercise Database**: 8 activities with accurate calorie burn rates per minute
-- Running: 11.4 cal/min
-- Jogging: 7.0 cal/min
-- Walking: 3.5 cal/min
-- Cycling: 8.5 cal/min
-- Swimming: 9.0 cal/min
-- Jump Rope: 12.0 cal/min
-- Dancing: 6.0 cal/min
-- Yoga: 3.0 cal/min
+### 6. Personalized Advice
+- LLM-generated fitness advice
+- Exercise suggestions
+- Meal alternatives
+- Health tips
+- Motivational messages
 
-**Features**:
-- Calculates time needed for each exercise
-- Formats results in human-readable format (hours + minutes)
-- Extensible for adding more exercises
+### 7. Dashboard
+- Daily calorie progress
+- Quick stats overview
+- Recent meals
+- Weekly trend chart
+- Streak tracking
 
-### ExerciseResultsViewController
+### 8. Statistics
+- Calorie intake charts (iOS 16+)
+- Meal type breakdown
+- Top foods list
+- Exercise summary
 
-**Custom UI Components**:
-- `ExerciseCell`: Custom table view cell with exercise icon, name, and time
-- Scrollable content for long exercise lists
-- Full-screen presentation with dismissal
+## Technical Details
 
-## Permissions
+### Frameworks Used
+- **SwiftUI**: UI framework
+- **SwiftData**: Data persistence
+- **PhotosUI**: Photo picker
+- **AVFoundation**: Camera access
+- **Charts**: Statistics visualization (iOS 16+)
+- **Vision/CoreML**: Food recognition (production)
 
-Required iOS permissions (configured in `Info.plist`):
-- `NSCameraUsageDescription`: Camera access for meal photos
-- `NSPhotoLibraryUsageDescription`: Photo library access for selecting existing photos
+### API Integration
+The app supports configurable LLM APIs:
+- OpenAI GPT-4o-mini (default)
+- Compatible with any OpenAI-compatible API
+- Configurable in Profile > API Settings
+
+### Calorie Calculations
+Uses the Mifflin-St Jeor equation for BMR:
+- Male: BMR = (10 × weight) + (6.25 × height) - (5 × age) + 5
+- Female: BMR = (10 × weight) + (6.25 × height) - (5 × age) - 161
+
+Exercise calorie burn uses MET values:
+- kcal/min = (MET × 3.5 × weight_kg) / 200
+
+### Permissions Required
+- `NSCameraUsageDescription`: Camera for meal photos
+- `NSPhotoLibraryUsageDescription`: Photo library access
+- `NSPhotoLibraryAddUsageDescription`: Save photos
+
+## Building the App
+
+### Requirements
+- Xcode 15+
+- iOS 17+
+- Swift 5.9+
+
+### Setup
+1. Open `food2fit.xcodeproj` in Xcode
+2. Select your development team for signing
+3. Build and run on simulator or device
+
+### Configuration
+1. Navigate to Profile > API Settings
+2. Enter your OpenAI API key
+3. Optionally customize endpoint and model
 
 ## Future Enhancements
 
 ### High Priority
-1. **ML Integration**: Replace simulated calories with real food recognition
-2. **User Profiles**: Save user weight for personalized calorie burn rates
-3. **History**: Track meals and exercises over time
+1. **Real CoreML Model**: Integrate Food101 or custom-trained model
+2. **HealthKit Integration**: Sync with Apple Health
+3. **Notifications**: Meal logging reminders
+4. **Barcode Scanning**: Packaged food recognition
 
 ### Medium Priority
-4. **HealthKit Integration**: Sync with Apple Health
-5. **Nutritional Breakdown**: Show macros, not just calories
-6. **Custom Exercises**: Let users add their own activities
+5. **Social Sharing**: Share progress achievements
+6. **Watch App**: Quick meal logging from Apple Watch
+7. **Widgets**: Home screen calorie widget
+8. **Meal Planning**: Weekly meal suggestions
+
+### Low Priority
+9. **AR Visualization**: View exercise in AR
+10. **Gamification**: Badges and achievements
+11. **Community**: Compare with friends
+12. **Recipe Integration**: Link to healthy recipes
 
 ### Low Priority
 7. **Social Sharing**: Share results with friends
