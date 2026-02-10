@@ -82,7 +82,10 @@ struct RootView: View {
     }
     
     private var shouldShowOnboarding: Bool {
-        !hasCompletedOnboarding && profiles.isEmpty
+        if profiles.isEmpty {
+            return true
+        }
+        return !(profiles.first?.hasCompletedOnboarding ?? false)
     }
     
     private func checkOnboardingStatus() {

@@ -51,9 +51,25 @@ struct MealAnalysisResultsView: View {
                 SecondaryButton("Log Another Meal", icon: "plus") {
                     onNewMeal()
                 }
+                
+                Button {
+                    showShareSheet = true
+                } label: {
+                    Label("Share Summary", systemImage: "square.and.arrow.up")
+                        .fontWeight(.medium)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .foregroundColor(.accentColor)
+                        .background(Color.accentColor.opacity(0.15))
+                        .cornerRadius(12)
+                }
+                .disabled(viewModel.totalCalories == 0)
             }
             .padding()
             .background(Color.appBackground)
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(activityItems: shareActivityItems)
         }
     }
     
@@ -263,6 +279,43 @@ struct MealAnalysisResultsView: View {
                 )
             }
         }
+    }
+}
+
+// MARK: - Sharing Helpers
+
+private extension MealAnalysisResultsView {
+    var shareActivityItems: [Any] {
+        var items: [Any] = [shareSummary]
+        if let image = viewModel.selectedImage {
+            items.append(image)
+        }
+        return items
+    }
+    
+    var shareSummary: String {
+        var sections: [String] = []
+        sections.append("food2fit meal analysis")
+        sections.append("Meal: \(viewModel.mealType.description) • \(viewModel.totalCalories) kcal")
+        
+        let foodSnippets = viewModel.nutritionInfo
+            .prefix(3)
+            .map { "\($0.food) (\($0.calories) kcal)" }
+            .joined(separator: ", ")
+        if !foodSnippets.isEmpty {
+            sections.append("Foods: \(foodSnippets)")
+        }
+        
+        if let exercise = viewModel.exerciseSuggestions.first {
+            sections.append("Move: \(exercise.exerciseType.description) for \(exercise.formattedDuration) to balance it")
+        }
+        
+        if let summary = viewModel.fitnessAdvice?.summary {
+            sections.append("Coach says: \(summary)")
+        }
+        
+        sections.append("Analyzed with food2fit - meals to movement")
+        return sections.joined(separator: "\n")
     }
 }
 

@@ -85,6 +85,8 @@ final class NutritionAPIService {
     
     static let shared = NutritionAPIService()
     
+    private let cache = NutritionCache()
+    
     /// API configuration
     private var apiKey: String?
     private var apiEndpoint: String = "https://api.openai.com/v1/chat/completions"
@@ -145,20 +147,27 @@ final class NutritionAPIService {
     /// - Parameter foodName: Name of the food item
     /// - Returns: NutritionInfo for the food
     func fetchNutrition(for foodName: String) async throws -> NutritionInfo {
-        // First, try local database for common foods
-        if let localNutrition = fallbackDatabase[foodName.lowercased()] {
-            // Add slight delay to simulate API call
+        let normalizedName = foodName.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if let cached = await cache.cachedNutrition(for: normalizedName) {
+            return cached
+        }
+        
+        if let localNutrition = fallbackDatabase[normalizedName.lowercased()] {
             try await Task.sleep(nanoseconds: 500_000_000)
+            await cache.store(localNutrition, for: normalizedName)
             return localNutrition
         }
         
-        // If API key is configured, try LLM API
         if let apiKey = apiKey, !apiKey.isEmpty {
-            return try await fetchFromLLM(foodName: foodName, apiKey: apiKey)
+            let info = try await fetchFromLLM(foodName: normalizedName, apiKey: apiKey)
+            await cache.store(info, for: normalizedName)
+            return info
         }
         
-        // Fallback: Generate estimated nutrition based on food name
-        return generateEstimatedNutrition(for: foodName)
+        let estimate = generateEstimatedNutrition(for: normalizedName)
+        await cache.store(estimate, for: normalizedName)
+        return estimate
     }
     
     /// Fetch nutrition information from LLM API
