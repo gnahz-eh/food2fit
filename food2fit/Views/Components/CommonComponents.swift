@@ -287,24 +287,41 @@ struct FormField: View {
     var keyboardType: UIKeyboardType = .default
     var isValid: Bool = true
     var errorMessage: String?
-    
+    var focusedField: FocusState<AnyHashable?>.Binding?
+    var fieldIdentifier: AnyHashable?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.secondary)
-            
-            TextField(placeholder, text: $text)
-                .keyboardType(keyboardType)
-                .padding()
-                .background(Color.appSecondaryBackground)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(isValid ? Color.gray.opacity(0.3) : Color.red, lineWidth: 1)
-                )
-            
+
+            Group {
+                if let focusedField = focusedField, let fieldIdentifier = fieldIdentifier {
+                    TextField(placeholder, text: $text)
+                        .keyboardType(keyboardType)
+                        .focused(focusedField, equals: fieldIdentifier)
+                        .padding()
+                        .background(Color.appSecondaryBackground)
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(isValid ? Color.gray.opacity(0.3) : Color.red, lineWidth: 1)
+                        )
+                } else {
+                    TextField(placeholder, text: $text)
+                        .keyboardType(keyboardType)
+                        .padding()
+                        .background(Color.appSecondaryBackground)
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(isValid ? Color.gray.opacity(0.3) : Color.red, lineWidth: 1)
+                        )
+                }
+            }
+
             if !isValid, let error = errorMessage {
                 Text(error)
                     .font(.caption)

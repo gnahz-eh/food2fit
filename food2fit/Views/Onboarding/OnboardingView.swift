@@ -142,7 +142,13 @@ struct FeatureRow: View {
 
 struct BasicInfoStepView: View {
     @ObservedObject var viewModel: OnboardingViewModel
-    
+    @FocusState private var focusedField: Field?
+
+    enum Field: Hashable {
+        case name
+        case age
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -162,43 +168,65 @@ struct BasicInfoStepView: View {
                     FormField(
                         title: "Your Name",
                         text: $viewModel.name,
-                        placeholder: "Enter your name"
+                        placeholder: "Enter your name",
+                        focusedField: $focusedField,
+                        fieldIdentifier: Field.name
                     )
-                    
+
                     FormField(
                         title: "Age",
                         text: $viewModel.age,
                         placeholder: "30",
                         keyboardType: .numberPad,
                         isValid: viewModel.isValidAge,
-                        errorMessage: "Age must be between 13 and 120"
+                        errorMessage: "Age must be between 13 and 120",
+                        focusedField: $focusedField,
+                        fieldIdentifier: Field.age
                     )
-                    
-                    FormField(
-                        title: "Weight (kg)",
-                        text: $viewModel.weightKg,
-                        placeholder: "70",
-                        keyboardType: .decimalPad,
-                        isValid: viewModel.isValidWeight,
-                        errorMessage: "Please enter a valid weight"
-                    )
-                    
-                    FormField(
-                        title: "Height (cm)",
-                        text: $viewModel.heightCm,
-                        placeholder: "170",
-                        keyboardType: .decimalPad,
-                        isValid: viewModel.isValidHeight,
-                        errorMessage: "Please enter a valid height"
-                    )
-                    
+
+                    // Weight Picker
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Weight (kg)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+
+                        Picker("Weight", selection: $viewModel.selectedWeight) {
+                            ForEach(Array(stride(from: 20.0, through: 200.0, by: 0.5)), id: \.self) { weight in
+                                Text(String(format: "%.1f kg", weight)).tag(weight)
+                            }
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(height: 120)
+                        .background(Color.appSecondaryBackground)
+                        .cornerRadius(10)
+                    }
+
+                    // Height Picker
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Height (cm)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+
+                        Picker("Height", selection: $viewModel.selectedHeight) {
+                            ForEach(Array(stride(from: 50.0, through: 250.0, by: 1.0)), id: \.self) { height in
+                                Text(String(format: "%.0f cm", height)).tag(height)
+                            }
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(height: 120)
+                        .background(Color.appSecondaryBackground)
+                        .cornerRadius(10)
+                    }
+
                     // Biological Sex Picker
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Biological Sex")
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundColor(.secondary)
-                        
+
                         Picker("Biological Sex", selection: $viewModel.biologicalSex) {
                             ForEach(BiologicalSex.allCases, id: \.self) { sex in
                                 Text(sex.description).tag(sex)
@@ -224,6 +252,9 @@ struct BasicInfoStepView: View {
                 .padding(.horizontal, 24)
                 .padding(.bottom, 40)
             }
+        }
+        .onTapGesture {
+            focusedField = nil
         }
     }
 }
@@ -421,55 +452,84 @@ struct CompleteStepView: View {
     let onComplete: () -> Void
     
     var body: some View {
-        VStack(spacing: 40) {
-            Spacer()
-            
-            // Success animation
-            ZStack {
-                Circle()
-                    .fill(Color.green.opacity(0.15))
-                    .frame(width: 140, height: 140)
-                
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 80))
-                    .foregroundColor(.green)
-            }
-            
-            VStack(spacing: 16) {
-                Text("You're All Set!")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
-                Text("Welcome, \(viewModel.name)! Your personalized fitness journey begins now.")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            }
-            
-            // Summary card
-            CardView {
-                VStack(alignment: .leading, spacing: 12) {
-                    SummaryRow(label: "Goal", value: viewModel.fitnessGoal.description)
-                    SummaryRow(label: "Activity", value: viewModel.activityLevel.description)
-                    
-                    if let weight = Double(viewModel.weightKg),
-                       let height = Double(viewModel.heightCm) {
-                        let bmi = weight / pow(height / 100, 2)
+        ZStack {
+            VStack(spacing: 40) {
+                Spacer()
+
+                // Success animation
+                ZStack {
+                    Circle()
+                        .fill(Color.green.opacity(0.15))
+                        .frame(width: 140, height: 140)
+
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(.green)
+                }
+
+                VStack(spacing: 16) {
+                    Text("You're All Set!")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+
+                    Text("Welcome, \(viewModel.name)! Your personalized fitness journey begins now.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+
+                // Summary card
+                CardView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        SummaryRow(label: "Goal", value: viewModel.fitnessGoal.description)
+                        SummaryRow(label: "Activity", value: viewModel.activityLevel.description)
+
+                        let bmi = viewModel.selectedWeight / pow(viewModel.selectedHeight / 100, 2)
                         SummaryRow(label: "BMI", value: String(format: "%.1f", bmi))
                     }
                 }
+                .padding(.horizontal, 24)
+
+                Spacer()
+
+                // Complete button
+                PrimaryButton("Start Using food2fit", icon: "arrow.right") {
+                    viewModel.startOnboarding {
+                        onComplete()
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
             }
-            .padding(.horizontal, 24)
-            
-            Spacer()
-            
-            // Complete button
-            PrimaryButton("Start Using food2fit", icon: "arrow.right") {
-                onComplete()
+            .blur(radius: viewModel.isLoading ? 3 : 0)
+            .disabled(viewModel.isLoading)
+
+            // Loading overlay
+            if viewModel.isLoading {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 24) {
+                    ProgressRing(
+                        progress: viewModel.loadingProgress,
+                        lineWidth: 8,
+                        color: .accentColor
+                    )
+                    .frame(width: 100, height: 100)
+
+                    Text(viewModel.loadingMessage)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+                .padding(40)
+                .background(Color.appSecondaryBackground)
+                .cornerRadius(20)
+                .shadow(radius: 20)
+                .transition(.scale.combined(with: .opacity))
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 40)
         }
     }
 }

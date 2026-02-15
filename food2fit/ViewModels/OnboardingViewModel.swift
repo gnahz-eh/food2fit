@@ -20,13 +20,28 @@ final class OnboardingViewModel: ObservableObject {
     @Published var age: String = "30"
     @Published var weightKg: String = "70"
     @Published var heightCm: String = "170"
+    @Published var selectedWeight: Double = 70.0
+    @Published var selectedHeight: Double = 170.0
     @Published var biologicalSex: BiologicalSex = .male
     @Published var fitnessGoal: FitnessGoal = .generalHealth
     @Published var activityLevel: ActivityLevel = .moderatelyActive
     
     @Published var isLoading: Bool = false
+    @Published var loadingProgress: Double = 0.0
+    @Published var loadingMessage: String = ""
     @Published var errorMessage: String?
     @Published var showError: Bool = false
+
+    // MARK: - Loading Messages
+
+    private let loadingMessages: [(progress: Double, message: String)] = [
+        (0.1, "Setting up your profile..."),
+        (0.3, "Calculating your daily goals..."),
+        (0.5, "Preparing your nutrition plan..."),
+        (0.7, "Customizing your experience..."),
+        (0.9, "Almost there..."),
+        (1.0, "Welcome aboard!")
+    ]
     
     // MARK: - Computed Properties
     
@@ -35,7 +50,7 @@ final class OnboardingViewModel: ObservableObject {
         case .welcome:
             return true
         case .basicInfo:
-            return !name.isEmpty && isValidAge && isValidWeight && isValidHeight
+            return !name.isEmpty && isValidAge
         case .fitnessGoals:
             return true
         case .activityLevel:
@@ -44,20 +59,18 @@ final class OnboardingViewModel: ObservableObject {
             return true
         }
     }
-    
+
     var isValidAge: Bool {
         guard let ageValue = Int(age) else { return false }
         return ageValue >= 13 && ageValue <= 120
     }
-    
+
     var isValidWeight: Bool {
-        guard let weight = Double(weightKg) else { return false }
-        return weight >= 20 && weight <= 500
+        return selectedWeight >= 20 && selectedWeight <= 500
     }
-    
+
     var isValidHeight: Bool {
-        guard let height = Double(heightCm) else { return false }
-        return height >= 50 && height <= 300
+        return selectedHeight >= 50 && selectedHeight <= 300
     }
     
     var progress: Double {
@@ -88,24 +101,46 @@ final class OnboardingViewModel: ObservableObject {
         let profile = UserProfile(
             name: name,
             age: Int(age) ?? 30,
-            weightKg: Double(weightKg) ?? 70,
-            heightCm: Double(heightCm) ?? 170,
+            weightKg: selectedWeight,
+            heightCm: selectedHeight,
             biologicalSex: biologicalSex,
             fitnessGoal: fitnessGoal,
             activityLevel: activityLevel,
             hasCompletedOnboarding: true
         )
-        
+
         context.insert(profile)
-        
+
         do {
             try context.save()
         } catch {
             errorMessage = "Failed to save profile: \(error.localizedDescription)"
             showError = true
         }
-        
+
         return profile
+    }
+
+    func startOnboarding(completion: @escaping () -> Void) {
+        isLoading = true
+        loadingProgress = 0.0
+
+        Task {
+            for step in loadingMessages {
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        loadingProgress = step.progress
+                        loadingMessage = step.message
+                    }
+                }
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            }
+
+            await MainActor.run {
+                isLoading = false
+                completion()
+            }
+        }
     }
 }
 
