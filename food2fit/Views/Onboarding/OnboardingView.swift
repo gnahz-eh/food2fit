@@ -165,24 +165,48 @@ struct BasicInfoStepView: View {
                 
                 // Form fields
                 VStack(spacing: 20) {
-                    FormField(
-                        title: "Your Name",
-                        text: $viewModel.name,
-                        placeholder: "Enter your name",
-                        focusedField: $focusedField,
-                        fieldIdentifier: Field.name
-                    )
+                    // Name field with focus
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Your Name")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
 
-                    FormField(
-                        title: "Age",
-                        text: $viewModel.age,
-                        placeholder: "30",
-                        keyboardType: .numberPad,
-                        isValid: viewModel.isValidAge,
-                        errorMessage: "Age must be between 13 and 120",
-                        focusedField: $focusedField,
-                        fieldIdentifier: Field.age
-                    )
+                        TextField("Enter your name", text: $viewModel.name)
+                            .focused($focusedField, equals: .name)
+                            .padding()
+                            .background(Color.appSecondaryBackground)
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                            )
+                    }
+
+                    // Age field with focus
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Age")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+
+                        TextField("30", text: $viewModel.age)
+                            .keyboardType(.numberPad)
+                            .focused($focusedField, equals: .age)
+                            .padding()
+                            .background(Color.appSecondaryBackground)
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(viewModel.isValidAge ? Color.gray.opacity(0.3) : Color.red, lineWidth: 1)
+                            )
+
+                        if !viewModel.isValidAge && !viewModel.age.isEmpty {
+                            Text("Age must be between 13 and 120")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                    }
 
                     // Weight Picker
                     VStack(alignment: .leading, spacing: 6) {
